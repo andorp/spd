@@ -3,6 +3,7 @@
 module Main where
 
 import           SPD.Framework
+import           Graphics.Gloss hiding (animate)
 import qualified Graphics.Gloss as Gloss
 import qualified Graphics.Gloss.Interface.IO.Game as Gloss
 
@@ -50,7 +51,10 @@ newtype WorldState = WS Int
 
 initWorld = WS 0
 
-data WorldInput = DropInput
+-- | Input information 
+data WorldInput
+  = PutCar Float
+  | DropInput
   deriving (Eq,Show)
 
 worldState f (WS distance) = f distance
@@ -64,25 +68,41 @@ render = worldState $ \distance -> Pictures [
 
 -- | There is no input handling 
 inputParser :: SF (Event Gloss.Event) WorldInput
-inputParser = arr (const DropInput)
+inputParser = arr $
+  yampaEvent
+    DropInput
+    (glossEvent
+      (\key keyState _modifiers (px,_py) -> case (key,keyState) of
+         (Gloss.MouseButton _, Gloss.Down) -> PutCar px
+         _ -> DropInput)
+      (\_point -> DropInput)
+      (\_size -> DropInput))
 
 -- | WorldState only depends on the time, the car postion
 -- takes the 3* of the spent time.
-clockTick :: SF WorldInput WorldState
-clockTick = proc input -> do
+runCar :: SF WorldInput WorldState
+runCar = proc input -> do
   t <- time -< input
   returnA -< WS (round (3*t))
 
-clockTickTests = do
-  assertEquals "Clock at every sec"
+runCarTests = do
+  assertEquals "Car position in every second up to 4"
     [WS 0, WS 3, WS 6, WS 9, WS 12]
-    (runSF 1.0 (replicate 5 DropInput) clockTick)
-    "Click tick miscalculated the x coordinate of the car."
+    (runSF 1.0 (replicate 5 DropInput) runCar)
+    "It miscalculated the x coordinate of the car."
 
 runSF :: (Eq a) => DTime -> [a] -> SF a b -> [b]
 runSF dt as sf = embed sf (deltaEncode dt as)
 
-main = animate initWorld (return . render) inputParser clockTick
+main = animate initWorld (return . render) inputParser runCar
+
+
+{-
+Sample Problem: Design a program that moves a car across the world
+canvas, from left to right, at the rate of three pixels per clock tick.
+If the mouse is clicked anywhere on the canvas, the car is placed at
+that point.
+-}
 
 {-
 NOTES

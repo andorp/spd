@@ -1,5 +1,7 @@
 module SPD.Framework (
     animate
+  , glossEvent
+  , yampaEvent
   , module FRP.Yampa
   ) where
 
@@ -43,3 +45,20 @@ animate initialWorld drawWorld parseInput update = do
        react rh (float2Double dt, Just input)
        readIORef newWorld
 
+-- * Events
+
+glossEvent
+  eventKey
+  motion
+  resize
+  e = case e of
+    Gloss.EventKey key keyState modifiers position -> eventKey key keyState modifiers position
+    Gloss.EventMotion point -> motion point
+    Gloss.EventResize size -> resize size
+
+yampaEvent
+  noEvent
+  event
+  e = case e of
+    NoEvent   -> noEvent
+    (Event x) -> event x
