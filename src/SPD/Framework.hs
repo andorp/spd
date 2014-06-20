@@ -13,7 +13,7 @@ import qualified Graphics.Gloss as Gloss
 import qualified Graphics.Gloss.Interface.IO.Game as Gloss
 
 
-animate :: world -> (world -> IO Gloss.Picture) -> SF (Event Gloss.Event) i -> SF i world -> IO ()
+animate :: world -> (world -> IO Gloss.Picture) -> SF (Event Gloss.Event) (Event i) -> SF (Event i) world -> IO ()
 animate initialWorld drawWorld parseInput update = do
   newInput <- newIORef NoEvent
   newWorld <- newIORef initialWorld
