@@ -141,9 +141,6 @@ runAndResetCarTests = do
                (runAndResetCar 0))
     "It miscalculated the x coordinate of the car."
 
-runSF :: (Eq a) => DTime -> [a] -> SF a b -> [b]
-runSF dt as sf = embed sf (deltaEncode dt as)
-
 main = animate initWorld (return . render) inputParser (runAndResetCar 0)
 
 tests = do

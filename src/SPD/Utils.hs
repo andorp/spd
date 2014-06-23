@@ -1,6 +1,7 @@
 module SPD.Utils where
 
 import Graphics.Gloss.Interface.IO.Game
+import FRP.Yampa (DTime, SF, embed, deltaEncode)
 
 {-
 Collection of utility functions to create event for the testing.
@@ -26,3 +27,8 @@ keyUp c x y = EventKey (Char c) Down noModifiers (x,y)
 
 -- | No shift, control or alt are pressed
 noModifiers = Modifiers Up Up Up
+
+-- Runs the signal function for equally partitioned time,
+-- for the given input elements and aggregates the result into a list
+runSF :: (Eq a) => DTime -> [a] -> SF a b -> [b]
+runSF dt as sf = embed sf (deltaEncode dt as)
