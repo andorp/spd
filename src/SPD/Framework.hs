@@ -1,5 +1,7 @@
 module SPD.Framework (
     animate
+  , animateWith
+  , Config(..)
   , glossEvent
   , yampaEvent
   , module FRP.Yampa
@@ -9,17 +11,30 @@ import           Data.IORef
 
 import           FRP.Yampa
 import           GHC.Float
-import qualified Graphics.Gloss as Gloss
-import qualified Graphics.Gloss.Interface.IO.Game as Gloss
+import qualified SPD.Gloss as Gloss
 
+-- Configuration for the animation.
+data Config = Config {
+    windowSize :: (Int, Int)
+  , backgroundColor :: Gloss.Color
+  }
 
-animate :: world -> (world -> IO Gloss.Picture) -> SF (Event Gloss.Event) (Event i) -> SF (Event i) world -> IO ()
-animate initialWorld drawWorld parseInput update = do
+-- | Default configuration with window size 100,100 and white background color.
+defaultConfig = Config {
+    windowSize = (100,100)
+  , backgroundColor = Gloss.white
+  }
+
+-- | Set the height and width of the window size.
+setWindowSize :: Config -> Int -> Int -> Config
+setWindowSize cfg width height = cfg { windowSize = (width,height) }
+
+animateWith :: Config -> world -> (world -> IO Gloss.Picture) -> SF (Event Gloss.Event) (Event i) -> SF (Event i) world -> IO ()
+animateWith cfg initialWorld drawWorld parseInput update = do
   newInput <- newIORef NoEvent
   newWorld <- newIORef initialWorld
 
-  let displayMode = Gloss.InWindow "Gloss" (100,100) (1,1) -- Gloss.FullScreen (100,100)
-      backgroundColor = Gloss.black
+  let displayMode = Gloss.InWindow "Gloss" (windowSize cfg) (1,1) -- Gloss.FullScreen (100,100)
       noOfSimulationSteps = 30
 
       saveWorld = arr (writeIORef newWorld)
@@ -32,7 +47,7 @@ animate initialWorld drawWorld parseInput update = do
 
   let nextWorld = step newInput newWorld rh
 
-  Gloss.playIO displayMode backgroundColor noOfSimulationSteps initialWorld drawWorld saveInputs nextWorld
+  Gloss.playIO displayMode (backgroundColor cfg) noOfSimulationSteps initialWorld drawWorld saveInputs nextWorld
   where
      mainSF parseInput update saveWorld = parseInput >>> update >>> saveWorld
 
@@ -44,6 +59,8 @@ animate initialWorld drawWorld parseInput update = do
        input <- readIORef newInput
        react rh (float2Double dt, Just input)
        readIORef newWorld
+
+animate = animateWith defaultConfig
 
 -- * Events
 

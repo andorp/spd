@@ -28,7 +28,13 @@ keyUp c x y = EventKey (Char c) Down noModifiers (x,y)
 -- | No shift, control or alt are pressed
 noModifiers = Modifiers Up Up Up
 
--- Runs the signal function for equally partitioned time,
+-- | Runs the signal function for equally partitioned time,
 -- for the given input elements and aggregates the result into a list
 runSF :: (Eq a) => DTime -> [a] -> SF a b -> [b]
 runSF dt as sf = embed sf (deltaEncode dt as)
+
+-- | Runs the signal function for the given accumulated times,
+-- for the given input elements and aggregates the result into a list
+runSFAccTime :: (Eq a) => [(DTime,a)] -> SF a b -> [b]
+runSFAccTime []          _  = error "runSFTime with empty input list"
+runSFAccTime ((t0,i):is) sf =  embed sf (i, map (\(t,i) -> (t,Just i)) is)
