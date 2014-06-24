@@ -27,6 +27,7 @@ for a happiness level of 100, the bar should go all the way across the scene.
 -}
 
 -- Exercise 43.
+-- Exercise 44.
 
 import           SPD.Framework
 import           SPD.Gloss hiding (Event)
@@ -36,21 +37,29 @@ import           SPD.Utils
 
 -- * Phisical constants
 
-worldWidth, worldHeight :: Num b => b
+worldWidth, worldHeight, speedOfCat :: Num b => b
 
-worldWidth = 400
-worldHeight = 400
+worldWidth = 100
+worldHeight = 100
+
+speedOfCat = 3
 
 config = Config (worldWidth,worldHeight) Gloss.white
 
 -- * Graphical constants
 
-cat = "cat1.bmp"
+cat1 = "cat1.bmp"
+cat2 = "cat2.bmp"
 
 -- | Loads the cat image from the disk
 -- Image format: uncompressed 24 or 32bit RGBA BMP file as a bitmap.
-loadCat :: IO Picture
-loadCat = loadBMP cat
+loadCatEven :: IO Picture
+loadCatEven = loadBMP cat1
+
+-- | Loads the cat image from the disk
+-- Image format: uncompressed 24 or 32bit RGBA BMP file as a bitmap.
+loadCatOdd :: IO Picture
+loadCatOdd = loadBMP cat2
 
 -- | There is no world event we react on.
 data WorldEvent = NoWorldEvent
@@ -67,31 +76,38 @@ initWorld = CatPosition 0
 -- * World definition
 
 -- | Renders the given picture at the given position
-render picture = worldState (\x -> Translate (fromIntegral x) 0 picture)
+render evenPic oddPic = worldState
+  (\x -> Translate (fromIntegral x) 0 (if (even x) then evenPic else oddPic))
 
 renderTests = do
-  let picture = Circle 1
-  assertEquals "Arbitrary render point"
-    (Translate 100 0 picture)
-    (render picture (CatPosition 100))
+  let even = Circle 1
+      odd  = Circle 2
+  assertEquals "Even render point"
+    (Translate 100 0 even)
+    (render even odd (CatPosition 100))
+    "Picture was not placed correctly"
+  assertEquals "Odd render point"
+    (Translate 101 0 odd)
+    (render even odd (CatPosition 101))
     "Picture was not placed correctly"
 
 worldRun :: SF (Event WorldEvent) WorldState
 worldRun = proc _input -> do
   pos <- time -< ()
-  returnA -< (CatPosition $ (round (3 * pos)) `mod` worldWidth)
+  returnA -< (CatPosition $ (round (speedOfCat * pos)) `mod` worldWidth)
 
 worldRunTests = do
   assertEquals "World runs test"
-    [CatPosition 0, CatPosition (worldWidth - 3), CatPosition 0, CatPosition 3]
+    [CatPosition 0, CatPosition (worldWidth - speedOfCat), CatPosition 0, CatPosition speedOfCat]
     (runSFAccTime
-      [(0,NoEvent), ((worldWidth / 3) - 1,NoEvent), (1,NoEvent), (1, NoEvent)]
+      [(0,NoEvent), ((worldWidth / speedOfCat) - 1,NoEvent), (1,NoEvent), (1, NoEvent)]
       worldRun)
     "Cat position is miscalculated at the partition"
 
 main = do
-  cat <- loadCat
-  animateWith config initWorld (return . render cat) (arr $ const NoEvent) worldRun
+  catEven <- loadCatEven
+  catOdd  <- loadCatOdd
+  animateWith config initWorld (return . render catEven catOdd) (arr $ const NoEvent) worldRun
 
 tests = do
   renderTests
