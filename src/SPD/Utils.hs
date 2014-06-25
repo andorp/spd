@@ -23,7 +23,13 @@ leftMouseButtonUp   x y = EventKey (MouseButton LeftButton) Up   noModifiers (x,
 keyPress c x y = EventKey (Char c) Down noModifiers (x,y)
 
 -- | Releases the key on the keyboard with the mouse at the given position
-keyUp c x y = EventKey (Char c) Down noModifiers (x,y)
+keyUp c x y = EventKey (Char c) Up noModifiers (x,y)
+
+-- | Presses the key on the keyboard with the mouse at the given position
+specKeyPress s x y = EventKey (SpecialKey s) Down noModifiers (x,y)
+
+-- | Releases the key on the keyboard with the mouse at the given position
+specKeyRelease s x y = EventKey (SpecialKey s) Up noModifiers (x,y)
 
 -- | No shift, control or alt are pressed
 noModifiers = Modifiers Up Up Up
@@ -38,3 +44,8 @@ runSF dt as sf = embed sf (deltaEncode dt as)
 runSFAccTime :: (Eq a) => [(DTime,a)] -> SF a b -> [b]
 runSFAccTime []          _  = error "runSFTime with empty input list"
 runSFAccTime ((t0,i):is) sf =  embed sf (i, map (\(t,i) -> (t,Just i)) is)
+
+-- * Graphic primitives
+
+rectangle :: Float -> Float -> Picture
+rectangle w h = Polygon [(0,0),(w,0),(w,h),(0,h)]
