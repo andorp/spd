@@ -45,7 +45,4 @@ runSFAccTime :: (Eq a) => [(DTime,a)] -> SF a b -> [b]
 runSFAccTime []          _  = error "runSFTime with empty input list"
 runSFAccTime ((t0,i):is) sf =  embed sf (i, map (\(t,i) -> (t,Just i)) is)
 
--- * Graphic primitives
 
-rectangle :: Float -> Float -> Picture
-rectangle w h = Polygon [(0,0),(w,0),(w,h),(0,h)]

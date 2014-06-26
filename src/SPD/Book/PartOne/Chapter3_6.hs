@@ -2,14 +2,10 @@
 module Main where
 
 import           SPD.Framework
+import           SPD.Gloss hiding (Event)
+import qualified SPD.Gloss as Gloss
+import           SPD.Test
 import           SPD.Utils
-import           Graphics.Gloss hiding (animate)
-import qualified Graphics.Gloss as Gloss
-import qualified Graphics.Gloss.Interface.IO.Game as Gloss
-
-import           Test.Themis.Test
-import           Test.Themis.Test.Asserts
-import           Test.Themis.Provider.Interactive
 
 -- * Physical constants
 
@@ -42,8 +38,7 @@ carbody = Pictures
   
 car = Pictures [ carbody, bothWheels ]
 
-rectangle :: Float -> Float -> Picture
-rectangle w h = Polygon [(0,0),(w,0),(w,h),(0,h)]
+-- * World
   
 -- | The number of pixels between the left border and the car
 newtype WorldState = WS Int

@@ -31,15 +31,21 @@ worldWidth, worldHeight, maxHappiness :: Int
 maxHappiness = 100
 
 -- | The space beetween the black frame and the red happy-o-meter
-borderSpace = 5
+borderSpace :: Num b => b
+borderSpace = fromIntegral 5
+
+statusBarWidth, statusBarHeight :: Num b => b
+
+statusBarWidth = fromIntegral maxHappiness
+statusBarHeight = fromIntegral 20
 
 worldWidth  = maxHappiness + (2 * borderSpace)
-worldHeight = 20 + (2 * borderSpace)
+worldHeight = statusBarHeight + (2 * borderSpace)
 
 worldConfig = Config (fromIntegral worldWidth, fromIntegral worldHeight) white
 
 -- | Happines decrease rate per seconds
-happinessDicreaseRate = 0.1
+happinessDicreaseRate = 1
 
 -- | Happiness for the cat when he gets feeded
 feedHappiness = 1 / 3
@@ -50,6 +56,8 @@ petHappiness = 1 / 5
 -- * Graphical constants
 
 blackFrame = Color black $ rectangle (fromIntegral worldWidth) (fromIntegral worldHeight)
+
+initWorld = maxHappyCat
 
 -- * World
 
@@ -182,15 +190,16 @@ catHappiness happy =
       | isSad happy = sadnessAux
       | otherwise = aux happy
 
-    switch' sf f = switch (sf >>> second notYet) f
+    -- switch' sf f = switch (sf >>> second notYet) f
+    switch' sf f = switch sf f
 
     changeMood (e, happy) = worldEvent (petting happy) (feeding happy) sadness maxhappy e
 
-    aux happy' = proc i -> do
+    aux happy' = second notYet <<< proc i -> do
       h <- dicreaseHappiness happy' -< i
-      sad <- edge -< isSad h
-      maxHappy <- edge -< isMaxHappy h
-      returnA -< (h, (attach (mergeEvents [tag sad Sad, tag maxHappy MaxHappy, i]) h))
+      sad <- edgeTag Sad -< isSad h
+      maxHappy <- edgeTag MaxHappy -< isMaxHappy h
+      returnA -< (h, (attach (mergeEvents [sad, maxHappy, i]) h))
 
     petting h = catHappiness (pet h)
     feeding h = catHappiness (feed h)
@@ -245,6 +254,17 @@ catHappinessTests = do
       , (1, Event Petting)
       ] (catHappiness (Happiness 0)))
     "Feeding and petting from zero is not computed correctly"
+
+-- * Render
+
+render = happiness $ \happy -> Pictures [blackFrame, statusBar happy]
+  where
+    statusBar w =
+      Translate borderSpace borderSpace
+        $ Color red
+        $ rectangle w statusBarHeight
+
+main = animate initWorld (return . render) (arr glossEventToWorldEvent) (catHappiness initWorld)
 
 tests = do
   maxHappyCatTests

@@ -13,6 +13,8 @@ import           FRP.Yampa
 import           GHC.Float
 import qualified SPD.Gloss as Gloss
 
+import Debug.Trace (traceShow)
+
 -- Configuration for the animation.
 data Config = Config {
     windowSize :: (Int, Int)
@@ -57,6 +59,7 @@ animateWith cfg initialWorld drawWorld parseInput update = do
           -> Float -> world -> IO world
      step newInput newWorld rh dt _world = do
        input <- readIORef newInput
+       writeIORef newInput NoEvent
        react rh (float2Double dt, Just input)
        readIORef newWorld
 

@@ -2,14 +2,10 @@
 module Main where
 
 import           SPD.Framework
+import           SPD.Gloss hiding (Event)
+import qualified SPD.Gloss as Gloss
+import           SPD.Test
 import           SPD.Utils
-import           Graphics.Gloss hiding (animate)
-import qualified Graphics.Gloss as Gloss
-import qualified Graphics.Gloss.Interface.IO.Game as Gloss
-
-import           Test.Themis.Test
-import           Test.Themis.Test.Asserts
-import           Test.Themis.Provider.Interactive
 
 {-
 All mosue events elements of an image
