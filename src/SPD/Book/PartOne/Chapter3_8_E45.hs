@@ -127,7 +127,7 @@ petTests = do
   assertEquals "Pet" (Happiness (100 + petHappiness)) (pet (Happiness 100)) ""
 
 -- | Convert the gloss events into input of the current world
-glossEventToWorldEvent :: Event Gloss.Event -> Event WorldEvent
+glossEventToWorldEvent :: Event GlossEvent -> Event WorldEvent
 glossEventToWorldEvent = mapFilterE
   (glossEvent
     (\key keyState _modifiers _xy -> if

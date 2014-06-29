@@ -42,7 +42,7 @@ worldEvent
     MouseMotion x y -> mouseMotion x y
 
 -- | Filters out the mouse movements
-inputToWorldEvent :: Event Gloss.Event -> Event WorldEvent
+inputToWorldEvent :: Event GlossEvent -> Event WorldEvent
 inputToWorldEvent = mapFilterE
   (glossEvent
     (\_key _keyState _modifiers _xy -> Nothing)

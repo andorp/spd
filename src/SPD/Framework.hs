@@ -1,6 +1,8 @@
 module SPD.Framework (
     animate
   , animateWith
+  , animateNoInput
+  , animateNoInputWith
   , Config(..)
   , glossEvent
   , yampaEvent
@@ -12,8 +14,6 @@ import           Data.IORef
 import           FRP.Yampa
 import           GHC.Float
 import qualified SPD.Gloss as Gloss
-
-import Debug.Trace (traceShow)
 
 -- Configuration for the animation.
 data Config = Config {
@@ -31,7 +31,7 @@ defaultConfig = Config {
 setWindowSize :: Config -> Int -> Int -> Config
 setWindowSize cfg width height = cfg { windowSize = (width,height) }
 
-animateWith :: Config -> world -> (world -> IO Gloss.Picture) -> SF (Event Gloss.Event) (Event i) -> SF (Event i) world -> IO ()
+animateWith :: Config -> world -> (world -> IO Gloss.Picture) -> SF (Event Gloss.GlossEvent) (Event i) -> SF (Event i) world -> IO ()
 animateWith cfg initialWorld drawWorld parseInput update = do
   newInput <- newIORef NoEvent
   newWorld <- newIORef initialWorld
@@ -53,9 +53,9 @@ animateWith cfg initialWorld drawWorld parseInput update = do
   where
      mainSF parseInput update saveWorld = parseInput >>> update >>> saveWorld
 
-     step :: IORef (Event Gloss.Event)
+     step :: IORef (Event Gloss.GlossEvent)
           -> IORef world
-          -> ReactHandle (Event Gloss.Event) (IO ())
+          -> ReactHandle (Event Gloss.GlossEvent) (IO ())
           -> Float -> world -> IO world
      step newInput newWorld rh dt _world = do
        input <- readIORef newInput
@@ -64,6 +64,15 @@ animateWith cfg initialWorld drawWorld parseInput update = do
        readIORef newWorld
 
 animate = animateWith defaultConfig
+
+animateNoInputWith :: Config -> world -> (world -> IO Gloss.Picture) -> SF () world -> IO ()
+animateNoInputWith cfg initWorld render world =
+  animateWith cfg initWorld render
+    (arr $ const NoEvent)
+    ((arr $ const ()) >>> world)
+
+animateNoInput :: world -> (world -> IO Gloss.Picture) -> SF () world -> IO ()
+animateNoInput = animateNoInputWith defaultConfig
 
 -- * Events
 

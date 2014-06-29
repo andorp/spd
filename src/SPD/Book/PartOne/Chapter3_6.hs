@@ -35,17 +35,17 @@ carbody = Pictures
   , Translate (widthOfCar / 4) (heightOfCar) $
       Color red $ rectangle (widthOfCar / 2) heightOfCar
   ]
-  
+
 car = Pictures [ carbody, bothWheels ]
 
 -- * World
-  
+
 -- | The number of pixels between the left border and the car
 newtype WorldState = WS Int
   deriving (Eq,Show)
 
 worldState f (WS distance) = f distance
-  
+
 initWorld = WS 0
 
 -- | Input information 
@@ -64,12 +64,12 @@ render = worldState $ \distance -> Pictures [
 
 -- | Every click on the mouse resets the car postion for the coordination
 -- of the click
-inputParser :: SF (Event Gloss.Event) (Event WorldEvent)
+inputParser :: SF (Event GlossEvent) (Event WorldEvent)
 inputParser = arr eventToWorldEvent
 
 -- | Every click on the mouse sets the car postion for the coordinate
 -- of the click
-eventToWorldEvent :: Event Gloss.Event -> Event WorldEvent
+eventToWorldEvent :: Event GlossEvent -> Event WorldEvent
 eventToWorldEvent = mapFilterE
   (glossEvent
     (\key keyState _modifiers (px,_py) -> case (key,keyState) of
