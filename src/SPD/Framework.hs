@@ -60,7 +60,7 @@ animateWith cfg initialWorld drawWorld parseInput update = do
      step newInput newWorld rh dt _world = do
        input <- readIORef newInput
        writeIORef newInput NoEvent
-       react rh (float2Double dt, Just input)
+       done <- react rh (float2Double dt, Just input)
        readIORef newWorld
 
 animate = animateWith defaultConfig

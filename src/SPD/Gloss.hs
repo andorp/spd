@@ -4,7 +4,11 @@ module SPD.Gloss (
   , GlossEvent
   , solidCircle
   , rectangle
+  , float2Double
+  , double2Float
   ) where
+
+import           GHC.Float
 
 import           Graphics.Gloss hiding (animate)
 import           Graphics.Gloss.Interface.IO.Game hiding (Event)
