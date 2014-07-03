@@ -1,8 +1,10 @@
 {-# LANGUAGE Arrows #-}
+{-# LANGUAGE MultiWayIf #-}
 module Main where
 
 import GHC.Float
 
+import SPD.FixedSize
 import SPD.Framework
 import SPD.Gloss
 import SPD.Test
@@ -34,6 +36,11 @@ close = height / 3
 
 initWorld = WorldState height
 
+-- Interval definitions
+descending = closeOpen close height 
+closingIn  = closeOpen 0 close
+landed     = closeClose 0 0
+
 -- * Graphical constants
 
 config = Config {
@@ -54,8 +61,15 @@ nxt = proc _i -> do
   let h = double2Float (height - t)
   returnA -< WorldState $ if (h > 0) then h else 0
 
-render = worldState $ \height -> Translate 0 height ufo
+render = worldState $ \h -> 
+  Pictures
+    [ Translate 0 h ufo
+    , Translate 0 height $ Scale 0.1 0.1 $
+       if | inInterval h descending  -> Color green  $ Text "Descending"
+          | inInterval h closingIn   -> Color orange $ Text "Closing In"
+          | inInterval h landed      -> Color red    $ Text "Landed"
+          | otherwise -> Text ""
+    ]
 
 main =
   animateNoInputWith config initWorld (return . render) nxt
-  

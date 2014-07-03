@@ -17,8 +17,8 @@ that boundary.
 -}
 
 data Boundary
-  = Opened
-  | Closed
+  = Opened -- Excludes the boundary
+  | Closed -- Includes the boundary
   deriving (Eq, Show)
 
 boundary

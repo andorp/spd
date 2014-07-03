@@ -44,10 +44,22 @@ trafficLightTests = do
   assertEquals "Yellow" (Red ()) (trafficLightNext (Yellow ())) "Yellow was not changed correctly."
 
 {-
+Interval
+
 An interval is a description of a class of (real or rational or integer) numbers
 via boundaries. The simplest interval has two boundaries: left and right.
 If the left boundary is to be included in the interval, we say it is a closed
 on the left. Similarly, a right-closed interval includes its right boundary.
 Finally, if an interval does not include a boundary, it is said to be open at
 that boundary.
+-}
+
+{-
+Itemizations
+
+An interval distinguishes different subclasses of numbers; an enumeration
+spells out item for item the useful elements of an existing class of data.
+Data definitions that use itemizations generalize intervals and enumerations.
+They allow the combination of any existing data classes (defined elsewhere)
+with each other and with individual pieces of data.
 -}

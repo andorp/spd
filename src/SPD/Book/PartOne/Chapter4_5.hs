@@ -29,6 +29,8 @@ move upward at a rate of three pixels per clock tick.
 data LR
   = Resting
   -- ^ Represents a rocket on the groung
+  | Countdown Int
+  -- ^ Represents a counting down before the launch
   | Flight Double
   -- ^ A Number denotes the height of a rocket in flight
   deriving (Eq, Show)
@@ -40,9 +42,11 @@ data LR
 -}
 
 lr resting
+   countdown
    flight
    l = case l of
      Resting -> resting
+     Countdown c -> countdown c
      Flight d -> flight d
 
 -- * Psyhical constants
@@ -53,6 +57,10 @@ width  = 100
 height = 300
 
 speed = 3
+
+-- The seconds after starts the launch
+startCountdown :: Double
+startCountdown = 3
 
 -- * Graphical constants
 
@@ -104,15 +112,24 @@ eventToLaunchParserTests = do
     "Other key is recognized as launch"
 
 -- Renders the rocket from the ground
-render = (\h -> Translate 0 h rocket) . height
-  where
-    height = double2Float . lr 0 id
+render = lr
+  rocket
+  (const rocket)
+  (\h -> Translate 0 (double2Float h) rocket)
 
 renderTests = do
   assertEquals "Before launch"
     (Translate 0 0 rocket)
     (render Resting)
     "Wrong resting coordinate is calculated"
+  assertEquals "Countdown"
+    (Translate 0 0 rocket)
+    (render (Countdown 0))
+    "Countdown zero is displayed wrongly"
+  assertEquals "Countdown"
+    (Translate 0 0 rocket)
+    (render (Countdown 03))
+    "Countdown 3 is displayed wrongly"
   assertEquals "After launch"
     (Translate 0 100 rocket)
     (render (Flight 100))
@@ -121,15 +138,23 @@ renderTests = do
 -- switch :: SF a (b, Event c) -> (c -> SF a b) -> SF a b
 
 launchRocket :: SF (Event Launch) LR
-launchRocket = switch resting launched
+launchRocket = switch resting countdown
   where
-    resting    = (constant Resting) &&& identity
-    launched _ = (constant 3) >>> integral >>^ Flight
+    resting     = (constant Resting) &&& identity
+    
+    countdown _ = switch countingDown launched
+    
+    countingDown = proc _i -> do
+      t <- (round . (+startCountdown)) ^<< integral -< (-1)
+      start <- edge -< (t <= 0)
+      returnA -< (Countdown t, start)
+
+    launched  _ = (constant 3) >>> integral >>^ Flight
 
 launchRocketTests = do
   assertEquals "Rocket has launched"
-    [Resting, Resting, Flight 0, Flight speed, Flight (2 * speed)]
-    (runSF 1.0 [NoEvent, NoEvent, Event Launch, NoEvent, Event Launch]
+    [Resting, Resting, Countdown 3, Countdown 2, Countdown 1, Flight 0, Flight speed, Flight (2 * speed)]
+    (runSF 1.0 [NoEvent, NoEvent, Event Launch, NoEvent, Event Launch, NoEvent, NoEvent, NoEvent]
                launchRocket)
     "Trajectory was miscalculated"
 
