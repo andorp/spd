@@ -46,11 +46,12 @@ salesTax x = (tax x) * x where
     | and [(lowPrice <= p), (p < luxoryPrice)] = normalTax
     | (p >= luxoryPrice) = luxoryTax
 
-salesTaxTests = do
-  assertEquals "0.0"    0 (salesTax 0) ""
-  assertEquals "Low price - 1"  0 (salesTax (lowPrice - 1)) ""
-  assertEquals "Low price" (normalTax * lowPrice) (salesTax lowPrice) ""
-  assertEquals "Low price + 1" (normalTax * (lowPrice + 1)) (salesTax (lowPrice + 1)) ""
-  assertEquals "Luxory price - 1" (normalTax * (luxoryPrice - 1)) (salesTax (luxoryPrice - 1)) ""
-  assertEquals "Luxory price" (luxoryTax * luxoryPrice) (salesTax luxoryPrice) ""
-  assertEquals "Luxory price + 1" (luxoryTax * (luxoryPrice + 1)) (salesTax (luxoryPrice + 1)) ""
+salesTaxTests = eqPartitions salesTax [
+    ("0.0"              ,0               ,0                            , "")
+  , ("Low price - 1"    ,lowPrice - 1    ,0                            , "")
+  , ("Low price"        ,lowPrice        ,normalTax * lowPrice         , "")
+  , ("Low price + 1"    ,lowPrice + 1    ,normalTax * (lowPrice + 1)   , "")
+  , ("Luxory price - 1" ,luxoryPrice - 1 ,normalTax * (luxoryPrice - 1), "")
+  , ("Luxory price"     ,luxoryPrice     ,luxoryTax * luxoryPrice      , "")
+  , ("Luxory price + 1" ,luxoryPrice + 1 ,luxoryTax * (luxoryPrice + 1), "")
+  ]
