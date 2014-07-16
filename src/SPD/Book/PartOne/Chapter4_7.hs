@@ -1,3 +1,4 @@
+{-# LANGUAGE Arrows #-}
 module Main where
 
 {-
@@ -7,12 +8,19 @@ door closer. If this kind of door is locked, you can unlock it with a key.
 An unlocked door is closed but someone pushing at the door opens it. Once the
 person has passed through the door and lets go, the automatic door takes over
 and closes the door again. When a door is closed, it can be locked again.
+
+Addition:
+The closing of the door should 1sec after the door openening.
 -}
 
 import SPD.Framework
 import SPD.Gloss
 import SPD.Test
 import SPD.Utils
+
+-- * Physical constants
+
+doorCloseTime = 1.0 {-s-}
 
 data DoorState
   = Locked
@@ -108,12 +116,49 @@ eventToDoorActionParserTests = group "eventToDoorActionParser" $
     , ("Mouse move", eventMotion 100 100, Nothing, "Mouse move is recognized")
     ]
 
+eventToDoorAction = mapFilterE eventToDoorActionParser
+
+door :: DoorState -> SF (Event DoorAction) DoorState
+-- ^ Locks, unlocks, closes, opens the door as described
+-- in the sample problem
+door s = switch (closeLoop >>> second notYet) door
+  where
+    closeLoop = proc action -> do
+      close <- repeatedly doorCloseTime doorCloser -< ()
+      state <- accumHold s -< close
+      returnA -< (state, fmap (flip doorActions state) action)
+
 {-
+-- v2: With arrow syntax, but the user experience could be better, as the closing of
+-- the door could happen even after openening it, in such case: 0.9 Open -> 1.0 Close
+-- beacuase of this we have to use switch to reset the timer for accumHold
+door = proc action -> do
+  close <- repeatedly doorCloseTime doorCloser -< ()
+  state <- accumHold Closed -< lMerge (fmap doorActions action) close
+  returnA -< state
 -}
+
+{-
+-- v1: Without arrow syntax
+door = ((repeatedly doorCloseTime doorCloser) &&& (arr (fmap doorActions)))
+   >>> (arr (uncurry merge))
+   >>> (accumHold Closed)
+-}
+
+doorTests = do
+  assertEquals "Door state changes"
+    [Closed, Closed, Locked, Closed, Open, Closed]
+    (runSF doorCloseTime
+      [NoEvent, NoEvent, Event Lock, Event Unlock, Event Push, NoEvent]
+      (door Closed))
+    "Door state transitions are miscalculated"
+
+main = animate Closed (return . doorRender) (arr eventToDoorAction) (door Closed)
 
 tests = do
   doorCloserTests
   doorActionsTests
   doorRenderTests
   eventToDoorActionParserTests
+  doorTests
 
